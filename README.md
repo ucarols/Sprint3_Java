@@ -69,4 +69,4 @@ O projeto utiliza Flyway para versionamento do banco de dados com as seguintes m
 - Giulia Correa Camillo - RM 554473
 
 ## Vídeo
-**[VIDEO]([https://youtu.be/NiYmRSZYkEs?si=dZLkhzaBkP8UPZWe](https://youtu.be/3ysJPwuv3PI?si=InNaIS0pMx383iWl))**
+https://youtu.be/3ysJPwuv3PI?si=InNaIS0pMx383iWl

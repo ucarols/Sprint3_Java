@@ -1,59 +1,35 @@
-#!/bin/bash
+# Clona o repositorio de Java no Cloudshell
 
-LOCATION="brazilsouth"
-RG="rg-s4-motuswatch"
-ACR_NAME="motuswatchs4acr"
-SERVER_NAME="sqlserver-s4-motuswatch"
-USERNAME="motuswatch"
-PASSWORD="Challenge2025!"
-DBNAME="motuswatchdb"
-APP_SERVICE_PLAN="plan-s4-motuswatch"
-WEBAPP_NAME="motuswatchs4webapp"
-IMAGE_NAME="motuswatch-java"
+# Baixa o script e joga no cloudshell pelo Gerenciar Arquivos > Carregar
 
-az group create --name $RG --location $LOCATION
+# (fica na home e roda o comando: chmod +x setup.sh
 
-az acr create --resource-group $RG --name $ACR_NAME --sku Basic --admin-enabled
+# roda ./setup.sh
 
-ACR_USERNAME=$(az acr credential show --name "$ACR_NAME" --query "username" -o tsv)
-ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
+az webapp up -g rg-motuswatch-sites \
+--location brazilsouth --plan planSites \
+-n motuswatch-webapp --sku B1 --logs --runtime "JAVA:17" --os-type Windows
 
-echo $ACR_USERNAME
-echo $ACR_PASSWORD
+# quando aparecer essa mensagem:
+# Deployment endpoint responded with status code 202
+# Start Date Time: (...)
+# da um Ctrl C que o script vai continuar sozinho
 
-az sql server create -l $LOCATION -g $RG -n $SERVER_NAME -u $USERNAME -p $PASSWORD --enable-public-network true
+az webapp log config --level verbose \
+-g rg-motuswatch-sites -n motuswatch-webapp \
+--web-server-logging filesystem --application-logging filesystem
 
-az sql db create -g $RG -s $SERVER_NAME -n $DBNAME --service-objective Basic --backup-storage-redundancy Local --zone-redundant false
+cd Sprint3_Java/
 
-az sql server firewall-rule create -g $RG -s $SERVER_NAME -n AllowAll --start-ip-address 0.0.0.0 --end-ip-address 255.255.255.255
+mvn clean package -DskipTests
 
-az appservice plan create \
-  --name $APP_SERVICE_PLAN \
-  --resource-group $RG \
-  --location $LOCATION \
-  --sku F1 \
-  --is-linux
+# Depois que o script terminar e o shell deixar vc escrever no terminal, roda esse comando
 
-az webapp create \
-  --name $WEBAPP_NAME \
-  --resource-group $RG \
-  --plan $APP_SERVICE_PLAN \
-  --runtime "JAVA:17-java17"
+#cd Sprint3_Java/
 
-az webapp config container set \
-    --name $WEBAPP_NAME \
-    --resource-group $RG \
-    --container-image-name ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:latest \
-    --container-registry-url https://${ACR_NAME}.azurecr.io \
-    --container-registry-user $ACR_USERNAME \
-    --container-registry-password $ACR_PASSWORD
+#az webapp deploy \
+#-g rg-motuswatch-sites -n motuswatch-webapp \
+#--src-path ./target/motuswatch-0.0.1-SNAPSHOT.jar \
+#--type jar
 
-az webapp config appsettings set \
-  --name "$WEBAPP_NAME" \
-  --resource-group "$RG" \
-  --settings \
-    WEBSITES_PORT=8080 \
-    ACTIVE_PROFILE=prod \
-    DB_URL="jdbc:sqlserver://${SERVER_NAME}.database.windows.net:1433;database=${DBNAME};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;" \
-    DB_USERNAME=$USERNAME \
-    DB_PASSWORD="$PASSWORD"
+#az webapp log tail -g rg-motuswatch-sites -n motuswatch-webapp

@@ -1,5 +1,3 @@
-#!/bin/bash
+# quando terminar tudo, roda esse comando no cloudshell
 
-RG="rg-s4-motuswatch"
-
-az group delete -g $RG --yes --no-wait
+az group delete -g rg-motuswatch-sites --yes --no-wait
